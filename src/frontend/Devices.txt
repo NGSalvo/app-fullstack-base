@@ -1,0 +1,16 @@
+[
+    {
+        "id":1,
+        "name":"Lampara 1",
+        "description":"Luz living",
+        "state":0,
+        "type":1
+    },
+    {
+        "id":2,
+        "name":"Ventilador 1",
+        "description":"Ventilador Habitacion",
+        "state":1,
+        "type":2
+    }
+]
