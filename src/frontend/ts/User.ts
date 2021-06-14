@@ -30,7 +30,7 @@ class User {
         this.email = email;
     }
 
-    getIsLogged ():boolean {
+    getIsLogged (): boolean {
         return this.isLogged;
     }
 

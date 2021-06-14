@@ -17,9 +17,17 @@ class ViewMainPage {
         // ejecutar metodo shwodecivec luego de parsear JSON
         let ul: HTMLElement = this.myFramework.getElementById('deviceList');
         
+        // Vaciar lista
+        while (ul.firstChild) {
+            ul.removeChild(ul.firstChild);
+        }
+
+        // poblar lista
         list.forEach(device => {
             let element = document.createElement('li')
+            let checked = !!device.state ? 'checked' : '';
             element.classList.add("collection-item", "avatar")
+
             element.innerHTML = `
                 <img src="images/yuna.jpg" alt="" class="circle">
                 <span class="title">${device.name}</span>
@@ -29,14 +37,14 @@ class ViewMainPage {
                 <div class="switch secondary-content">
                     <label>
                         Off
-                        <input id="dev_${device.id}" type="checkbox">
+                        <input id="dev_${device.id}" type="checkbox" ${checked}>
                         <span class="lever"></span>
                         On
                     </label>
                 </div>
             `;
             ul.appendChild(element)
-        })
+        });
     }
 
     getSwitchStateById(id: string): boolean {
@@ -103,8 +111,9 @@ class Main implements EventListenerObject, GETResponseListener, POSTResponseList
                     if (xhr.status == 200) {
                         console.log("Llego la respuesta!!!!");
                         console.log(xhr.responseText);
-                        let parrafo = this.myFramework.getElementById("lista");
-                        parrafo.innerHTML = xhr.responseText;
+                        // let parrafo = this.myFramework.getElementById("lista");
+                        // parrafo.innerHTML = xhr.responseText;
+                        this.myFramework.requestGET("http://localhost:8000/devices/", this);
                     } else {
                         alert("error!!")
                     }
@@ -114,11 +123,15 @@ class Main implements EventListenerObject, GETResponseListener, POSTResponseList
             }
             xhr.open("GET","http://localhost:8000/devices", true)
             xhr.send();
+            return;
         } 
         if (boton.id.includes("dev_")){
             console.log(boton.id);
             let checked = this.viewMainPage.getSwitchStateById(boton.id);
-            this.myFramework.requestPost("http://localhost:8000/devices/", {checked}, this);
+            let state = checked ? 1 : 0;
+            let id = boton.id.slice(4);
+            this.myFramework.requestPost("http://localhost:8000/devices/", {id, state}, this);
+            return;
         }
 
         else {
