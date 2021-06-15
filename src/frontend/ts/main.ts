@@ -1,5 +1,5 @@
 //Ejercicio 9
-interface DeviceInt {
+type DeviceInt = {
     id: number;
     name: string;
     description: string;
@@ -11,23 +11,21 @@ interface DeviceInt {
 class ViewMainPage {
     public myFramework: MyFramework = new MyFramework();
     showDevices(list: Array<DeviceInt>): void {
-        // agregar elemento li al elemento ul de id "deviceList"
-        // utilizar getelementbyid tdhe myframework
-        // usar innerhtml
-        // ejecutar metodo shwodecivec luego de parsear JSON
         let ul: HTMLElement = this.myFramework.getElementById('deviceList');
         
-        // Vaciar lista
+        // clear list
         while (ul.firstChild) {
             ul.removeChild(ul.firstChild);
         }
 
         // poblar lista
         list.forEach(device => {
+            // create li element
             let element = document.createElement('li')
             let checked = !!device.state ? 'checked' : '';
+            // add class to element
             element.classList.add("collection-item", "avatar")
-
+            // add rest of content
             element.innerHTML = `
                 <img src="images/yuna.jpg" alt="" class="circle">
                 <span class="title">${device.name}</span>
@@ -43,6 +41,7 @@ class ViewMainPage {
                     </label>
                 </div>
             `;
+            // add li element to ul
             ul.appendChild(element)
         });
     }
