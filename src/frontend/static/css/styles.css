@@ -10,10 +10,22 @@ main {
 
 .edit_dev {
   color: black;
+  padding: 0 30px;
+}
+
+.edit_dev:hover {
+  background-color: #2196f3;
+  color: white;
 }
 
 .delete_dev {
   color: #f44336;
+  padding: 0 30px;
+}
+
+.delete_dev:hover {
+  background-color: rgba(244, 67, 54, 0.7);
+  color: white;
 }
 
 .btn-cancel {
