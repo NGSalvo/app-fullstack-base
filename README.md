@@ -344,3 +344,10 @@ Este proyecto está bajo Licencia ([MIT](https://choosealicense.com/licenses/mit
 ---
 
 **Copyright © Goto IoT 2021** ⌨️ [**Website**](https://www.gotoiot.com) ⌨️ [**Group**](https://groups.google.com/g/gotoiot) ⌨️ [**Github**](https://www.github.com/gotoiot) ⌨️ [**Twitter**](https://www.twitter.com/gotoiot) ⌨️ [**Wiki**](https://github.com/gotoiot/doc/wiki)
+
+---
+
+Se utilizó como recurso gratuito:
+
+- <a target="_blank" href="https://icons8.com/icon/yGKsUh4h-5W2/light-dimmer">Light Dimmer</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+- <a target="_blank" href="https://icons8.com/icon/XBJfETMfZHpS/light">Light</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
