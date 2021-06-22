@@ -20,10 +20,15 @@ app.use(express.static('/home/node/app/static/'));
 
 //=======[ Main module code ]==================================================
 
+// Endpoint: /devices
+// Retorna json de dispositivos
 app.get('/devices/', function (req, res, next) {
   res.status(200).json(devices);
 });
 
+// Endpoint: /devices/:id
+// id - el ID del dispositivo
+// Retorna el json de un dispositivo
 app.get('/devices/:id', function (req, res, next) {
   const id = req.params.id;
   const deviceIndex = getDeviceIndexById(id);
@@ -36,6 +41,9 @@ app.get('/devices/:id', function (req, res, next) {
   }
 });
 
+// Endpoint: /devices/:id
+// id - el ID del dispositivo
+// Actualiza el dispositivo
 app.put('/devices/:id', function (req, res, next) {
   const id = req.params.id;
   const deviceIndex = getDeviceIndexById(id);
@@ -54,6 +62,8 @@ app.put('/devices/:id', function (req, res, next) {
   }
 });
 
+// Endpoint: /devices/create
+// Crea un nuevo dispositivo
 app.post('/devices/create', function (req, res, next) {
   const { name, description, state, type } = req.body;
 
@@ -81,6 +91,9 @@ app.post('/devices/create', function (req, res, next) {
     .send({ message: 'Se creó el dispositivo satisfactoriamente' });
 });
 
+// Endpoint: /devices/:id
+// id - el ID del dispositivo
+// Elimina un dispositivo
 app.delete('/devices/:id', function (req, res, next) {
   const id = req.params.id;
   const deviceIndex = getDeviceIndexById(id);
@@ -101,10 +114,15 @@ app.listen(PORT, function (req, res) {
   console.log('NodeJS API running correctly');
 });
 
+// id - id del dispositivo que se busca
+// Retorna el indice del dispositivo
 function getDeviceIndexById(id) {
   return devices.findIndex((device) => id === device.id);
 }
 
+// file - el archivo a escribir
+// path - la direccion del archivo a escribir
+// Escribe/Sobreescribe un archivo
 function writeToFile(file, path) {
   const fileStringified = JSON.stringify(file);
   fs.writeFile(path, fileStringified, (err) => {
@@ -114,6 +132,8 @@ function writeToFile(file, path) {
   });
 }
 
+// item - elemento a comparar
+// Devuelve verdadero si el item esta definido, sino devuelve falso.
 function isDefined(item) {
   if (item === undefined) {
     return false;
@@ -121,6 +141,7 @@ function isDefined(item) {
   return true;
 }
 
+// Devuelve un ID unico
 function getNewId() {
   return uuidv4();
 }
