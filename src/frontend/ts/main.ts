@@ -40,6 +40,7 @@ class Main
 
     const comboboxes = document.querySelectorAll('select');
     this.selectInstances = M.FormSelect.init(comboboxes);
+    comboboxes[0].addEventListener('change', this);
   }
 
   // Manejo de los eventos
@@ -59,7 +60,7 @@ class Main
 
     // Evento del boton de editar
     if (element.classList.contains('edit_dev')) {
-      console.log('EDIT:', this.currentDevice);
+      // console.log('EDIT:', this.currentDevice);
       this.formStatus = 'editing';
       document.getElementById('modal1').querySelector('h4').textContent =
         'Editar dispositivo';
@@ -67,6 +68,8 @@ class Main
       this.myFramework.requestGET(`${this.URI}/${id}`, this);
       setTimeout(() => {
         this.setFormData();
+        let type = this.currentDevice.type;
+        this.viewMainPage.showModalComponentType(type, this.currentDevice);
       }, 200);
       return;
     }
@@ -96,7 +99,7 @@ class Main
       // Evento del boton guardar (MODAL) si esta creando
       if (this.formStatus === 'creating') {
         this.currentDevice = this.getFormData();
-        console.log(this.currentDevice);
+        // console.log(this.currentDevice);
         this.myFramework.requestPOST(
           `${this.URI}/create`,
           this.currentDevice,
@@ -128,6 +131,13 @@ class Main
       document.getElementById('modal1').querySelector('h4').textContent =
         'Crear dispositivo';
       return;
+    }
+
+    if (element.id === 'deviceType') {
+      let type = +(
+        this.myFramework.getElementById('deviceType') as HTMLSelectElement
+      ).value;
+      this.viewMainPage.showModalComponentType(type, this.currentDevice);
     }
   }
 
@@ -220,29 +230,41 @@ class Main
     let description = (
       this.myFramework.getElementById('deviceDescription') as HTMLInputElement
     ).value;
-    let state = (
-      this.myFramework.getElementById('deviceState') as HTMLInputElement
-    ).checked
-      ? 1
-      : 0;
     let type = +(
       this.myFramework.getElementById('deviceType') as HTMLSelectElement
     ).value;
+    let state: number;
+    if (type === 1) {
+      state = state = (
+        this.myFramework.getElementById('deviceState') as HTMLInputElement
+      ).valueAsNumber;
+    } else {
+      state = (
+        this.myFramework.getElementById('deviceState') as HTMLInputElement
+      ).checked
+        ? 1
+        : 0;
+    }
 
     return { id, name, description, state, type };
   }
 
   // Configuro todos los datos del modal
   setFormData() {
-    console.log('setFormData', this.currentDevice);
+    // console.log('setFormData', this.currentDevice);
     (this.myFramework.getElementById('deviceName') as HTMLInputElement).value =
       this.currentDevice.name;
     (
       this.myFramework.getElementById('deviceDescription') as HTMLInputElement
     ).value = this.currentDevice.description;
-    (
-      this.myFramework.getElementById('deviceState') as HTMLInputElement
-    ).checked = this.currentDevice.state === 0 ? false : true;
+    if (this.currentDevice.type === 1) {
+      (this.myFramework.getElementById('deviceState') as HTMLInputElement)
+        .valueAsNumber;
+    } else {
+      (
+        this.myFramework.getElementById('deviceState') as HTMLInputElement
+      ).checked = this.currentDevice.state === 0 ? false : true;
+    }
     (
       this.myFramework.getElementById('deviceType') as HTMLSelectElement
     ).options[this.currentDevice.type].selected = true;
@@ -300,4 +322,5 @@ window.addEventListener('load', function () {
   let btnCreateDevice: HTMLElement =
     main.myFramework.getElementById('btnCreateDevice');
   btnCreateDevice.addEventListener('click', main);
+  // main.viewMainPage.showModalComponentType(main.currentDevice);
 });

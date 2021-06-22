@@ -24,6 +24,18 @@ class MyFramework {
     return event.target as HTMLElement;
   }
 
+  // Devuelve el elemento padre
+  getElementParent(element: HTMLElement): HTMLElement {
+    return element.parentElement;
+  }
+
+  // Elimina elementos hijos
+  removeChildren(element: HTMLElement): void {
+    while (element.lastChild) {
+      element.removeChild(element.lastChild);
+    }
+  }
+
   requestGET(url: string, listener: GETResponseListener) {
     let xhr: XMLHttpRequest;
     xhr = new XMLHttpRequest();

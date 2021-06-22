@@ -5,9 +5,7 @@ class ViewMainPage {
     let ul: HTMLElement = this.myFramework.getElementById('deviceList');
 
     // vaciar lista
-    while (ul.firstChild) {
-      ul.removeChild(ul.firstChild);
-    }
+    this.myFramework.removeChildren(ul);
 
     // poblar lista
     list.forEach((device) => {
@@ -43,16 +41,17 @@ class ViewMainPage {
     return deviceSwitch.checked;
   }
 
+  // Devuelve componente segun tipo de dispositivo
   getComponentByType(device: DeviceInt): string {
-    let checked = !!device.state ? 'checked' : '';
     let element: string;
     switch (device.type) {
       case 1:
         element = `<p class="range-field secondary-content">
-      <input type="range" id="status_${device.id}" min="0" max="100" />
-      </p>`;
+        <input type="range" id="status_${device.id}" min="0" max="100" />
+        </p>`;
         break;
       case 2:
+        let checked = !!device.state ? 'checked' : '';
         element = `<div class="switch secondary-content">
                     <label>
                         Off
@@ -66,5 +65,41 @@ class ViewMainPage {
         element = '';
     }
     return element;
+  }
+
+  // Devuelve componente segun tipo de dispositivo en el modal
+  getComponentModalByType(type: number, device): string {
+    let element: string;
+    switch (type) {
+      case 1:
+        element = `<p class="range-field secondary-content">
+      <input type="range" id="deviceState" min="0" max="100" />
+      </p>`;
+        break;
+      case 2:
+        let checked = !!device.state ? 'checked' : '';
+        element = `<div class="switch secondary-content">
+                    <label>
+                        Off
+                        <input id="deviceState" type="checkbox" ${checked}>
+                        <span class="lever"></span>
+                        On
+                    </label>
+                </div>`;
+        break;
+      default:
+        element = '';
+    }
+    return element;
+  }
+
+  // Renderiza modal
+  showModalComponentType(type: number, device: DeviceInt) {
+    let modal: HTMLElement = this.myFramework.getElementById('modal1');
+    let element: HTMLElement = modal.querySelector('.secondary-content');
+    let parentElement = this.myFramework.getElementParent(element);
+    this.myFramework.removeChildren(parentElement);
+    let typeComponent = this.getComponentModalByType(type, device);
+    parentElement.innerHTML = typeComponent;
   }
 }
