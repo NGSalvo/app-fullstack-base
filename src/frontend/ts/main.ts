@@ -51,10 +51,22 @@ class Main
 
     // Evento del estado del dispositivo
     if (element.id.includes('status_')) {
-      let checked = this.viewMainPage.getSwitchStateById(element.id);
-      let state = checked ? 1 : 0;
+      let type = element.getAttribute('type') === 'range' ? '1' : '0';
+      let value: number | boolean;
+      let state: number;
+      if (type === '1') {
+        value = this.viewMainPage.getRangeValueById(element.id);
+      } else {
+        value = this.viewMainPage.getSwitchStateById(element.id) ? 1 : 0;
+      }
+      state = value;
       let id = element.id.slice(7);
+      console.log(state);
       this.myFramework.requestPUT(`${this.URI}/${id}`, { state }, this);
+      this.currentDevice = this.devices.find((device) => device.id === id);
+      this.currentDevice.state = state;
+      this.updateDevice(id, this.currentDevice);
+      console.log(this.devices);
       return;
     }
 

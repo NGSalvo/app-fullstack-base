@@ -41,13 +41,21 @@ class ViewMainPage {
     return deviceSwitch.checked;
   }
 
+  // Devuelve el estado del elemento checkbox
+  getRangeValueById(id: string): number {
+    let deviceRange: HTMLInputElement = this.myFramework.getElementById(
+      id,
+    ) as HTMLInputElement;
+    return deviceRange.valueAsNumber;
+  }
+
   // Devuelve componente segun tipo de dispositivo
   getComponentByType(device: DeviceInt): string {
     let element: string;
     switch (device.type) {
       case 1:
         element = `<p class="range-field secondary-content">
-        <input type="range" id="status_${device.id}" min="0" max="100" />
+        <input type="range" id="status_${device.id}" min="0" max="1" step="0.1" value="${device.state}" />
         </p>`;
         break;
       case 2:
@@ -73,7 +81,7 @@ class ViewMainPage {
     switch (type) {
       case 1:
         element = `<p class="range-field secondary-content">
-      <input type="range" id="deviceState" min="0" max="100" />
+      <input type="range" id="deviceState" min="0" max="1" step="0.1" value="${device.state}"/>
       </p>`;
         break;
       case 2:
