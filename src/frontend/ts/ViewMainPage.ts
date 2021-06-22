@@ -16,8 +16,12 @@ class ViewMainPage {
       // Agrega id
       element.id = `dev_${device.id}`;
       // Agrega el resto del contenido
+      let img =
+        device.type === 1
+          ? './static/images/icons8-light-dimmer-64.png'
+          : './static/images/icons8-light-64.png';
       element.innerHTML = `
-                <img src="images/yuna.jpg" alt="" class="circle">
+                <img src="${img}" alt="" class="circle">
                 <span class="title">${device.name}</span>
                 <p>${device.description}</p>
             `;
