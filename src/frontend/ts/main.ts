@@ -1,205 +1,303 @@
-//Ejercicio 9
 type DeviceInt = {
-  id: number;
+  id?: string;
   name: string;
   description: string;
   state: number;
   type: number;
 };
 
-// Ejercicio 10
-class ViewMainPage {
-  public myFramework: MyFramework = new MyFramework();
-  showDevices(list: Array<DeviceInt>): void {
-    let ul: HTMLElement = this.myFramework.getElementById('deviceList');
-
-    // clear list
-    while (ul.firstChild) {
-      ul.removeChild(ul.firstChild);
-    }
-
-    // poblar lista
-    list.forEach((device) => {
-      // create li element
-      let element = document.createElement('li');
-      let checked = !!device.state ? 'checked' : '';
-      // add class to element
-      element.classList.add('collection-item', 'avatar');
-      // add rest of content
-      element.innerHTML = `
-                <img src="images/yuna.jpg" alt="" class="circle">
-                <span class="title">${device.name}</span>
-                <p>${device.description} <br>
-                    ${device.type}
-                </p>
-                <div class="switch secondary-content">
-                    <label>
-                        Off
-                        <input id="dev_${device.id}" type="checkbox" ${checked}>
-                        <span class="lever"></span>
-                        On
-                    </label>
-                </div>
-            `;
-      // add li element to ul
-      ul.appendChild(element);
-    });
-  }
-
-  getSwitchStateById(id: string): boolean {
-    let deviceSwitch: HTMLInputElement = this.myFramework.getElementById(
-      id,
-    ) as HTMLInputElement;
-    return deviceSwitch.checked;
-  }
-}
+// Estados del formulario
+type FormStatus = 'editing' | 'creating' | 'deleting' | 'none';
 
 class Main
-  implements EventListenerObject, GETResponseListener, POSTResponseListener
+  implements
+    EventListenerObject,
+    GETResponseListener,
+    POSTResponseListener,
+    DELETEResponseListener,
+    PUTResponseListener
 {
   public myFramework: MyFramework;
   public viewMainPage: ViewMainPage;
+  public formStatus: FormStatus = 'none';
+  public currentDevice: DeviceInt = this.defaultDevice();
+  public modalInstances;
+  public selectInstances;
+  private URI = 'http://localhost:8000/devices';
+  public devices: Array<DeviceInt>;
+  public elementListener = new WeakMap();
   constructor() {}
 
   main(): void {
-    console.log('Mensaje del metodo main()');
     this.myFramework = new MyFramework();
 
-    // Ejercicio 8
-    this.myFramework.requestGET('./Devices.txt', this);
+    this.myFramework.requestGET(this.URI, this);
 
     this.viewMainPage = new ViewMainPage();
+
+    const modals = document.querySelectorAll('.modal');
+    this.modalInstances = M.Modal.init(modals, { dismissible: false });
+
+    const comboboxes = document.querySelectorAll('select');
+    this.selectInstances = M.FormSelect.init(comboboxes);
   }
 
-  mostrarLista() {
-    let usersList: Array<User> = new Array<User>();
-    let user1: User = new User(1, 'a@a.com', true);
-    let user2: User = new User(2, 'b@b.com', false);
-    let user3: User = new User(3, 'c@c.com', true);
-
-    usersList.push(user1);
-    usersList.push(user2);
-    usersList.push(user3);
-
-    for (let user of usersList) {
-      user.printInfo();
-    }
-  }
-
-  // Ejercicio 4-2
-  mostrarUsers(users: Array<User>): void {
-    for (let user of users) {
-      console.log(user);
-    }
-  }
-
-  // Ejercicio 5
-  evento(ev: Event): void {
-    console.log('se hizo click!');
-    console.log(this); // devuelve el nodo con el elemento boton
-  }
-
+  // Manejo de los eventos
   handleEvent(event: Event): void {
-    console.log(this); // muestra el objeto instanciado
-    console.log(event.target);
+    // console.log(event.target);
 
-    // Ejercicio 7
-    let boton: HTMLElement = this.myFramework.getElementByEvent(event);
+    let element: HTMLElement = this.myFramework.getElementByEvent(event);
 
-    if (boton.textContent === 'Listar') {
-      // this.mostrarLista();
-      let xhr: XMLHttpRequest = new XMLHttpRequest();
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState == 4) {
-          if (xhr.status == 200) {
-            console.log('Llego la respuesta!!!!');
-            console.log(xhr.responseText);
-            // let parrafo = this.myFramework.getElementById("lista");
-            // parrafo.innerHTML = xhr.responseText;
-            this.myFramework.requestGET('http://localhost:8000/devices/', this);
-          } else {
-            alert('error!!');
-          }
-        }
-      };
-      xhr.open('GET', 'http://localhost:8000/devices', true);
-      xhr.send();
-      return;
-    }
-    if (boton.id.includes('dev_')) {
-      console.log(boton.id);
-      let checked = this.viewMainPage.getSwitchStateById(boton.id);
+    // Evento del estado del dispositivo
+    if (element.id.includes('status_')) {
+      let checked = this.viewMainPage.getSwitchStateById(element.id);
       let state = checked ? 1 : 0;
-      let id = boton.id.slice(4);
-      this.myFramework.requestPost(
-        'http://localhost:8000/devices/',
-        { id, state },
-        this,
-      );
+      let id = element.id.slice(7);
+      this.myFramework.requestPUT(`${this.URI}/${id}`, { state }, this);
       return;
-    } else {
-      alert('No hay funcion para ese boton');
+    }
+
+    // Evento del boton de editar
+    if (element.classList.contains('edit_dev')) {
+      console.log('EDIT:', this.currentDevice);
+      this.formStatus = 'editing';
+      document.getElementById('modal1').querySelector('h4').textContent =
+        'Editar dispositivo';
+      let id = element.id.slice(5);
+      this.myFramework.requestGET(`${this.URI}/${id}`, this);
+      setTimeout(() => {
+        this.setFormData();
+      }, 200);
+      return;
+    }
+
+    // Evento del boton de eliminar
+    if (element.classList.contains('delete_dev')) {
+      this.formStatus = 'deleting';
+      let id = element.id.slice(7);
+      this.currentDevice.id = id;
+      return;
+    }
+
+    // Evento del boton de guardar (MODAL)
+    if (element.classList.contains('btn-save')) {
+      // Evento del boton guardar (MODAL) si esta editando
+      if (this.formStatus === 'editing') {
+        this.currentDevice = this.getFormData();
+        let id = this.currentDevice.id;
+        this.myFramework.requestPUT(
+          `${this.URI}/${id}`,
+          this.currentDevice,
+          this,
+        );
+        this.updateDevice(id, this.currentDevice);
+        this.clearForm();
+      }
+      // Evento del boton guardar (MODAL) si esta creando
+      if (this.formStatus === 'creating') {
+        this.currentDevice = this.getFormData();
+        console.log(this.currentDevice);
+        this.myFramework.requestPOST(
+          `${this.URI}/create`,
+          this.currentDevice,
+          this,
+        );
+        this.addNewDevice(this.currentDevice);
+        this.clearForm();
+      }
+
+      // Evento del boton guardar (MODAL) si esta eliminando
+      if (this.formStatus === 'deleting') {
+        let id = this.currentDevice.id;
+        this.myFramework.requestDELETE(`${this.URI}/${id}`, this);
+        this.removeDevice(id);
+        this.clearForm();
+      }
+      // Se renderiza los elementos creados, modificados u eliminados
+      this.getDevices();
+      return;
+    }
+
+    if (element.classList.contains('btn-cancel')) {
+      this.clearForm();
+      return;
+    }
+
+    if (element.textContent === 'add') {
+      this.formStatus = 'creating';
+      document.getElementById('modal1').querySelector('h4').textContent =
+        'Crear dispositivo';
+      return;
     }
   }
 
-  // Ejercicio 8
-  handleGETResponse(status: number, response: string): void {
+  // -------Manejo de AJAX-------
+  handleGETResponse(status: number, response: any): void {
+    let res = JSON.parse(response);
     if (status === 200) {
-      // Ejercicio 9
-      let data: DeviceInt[] = JSON.parse(response);
-      // console.log(`Parsed response: ${JSON.stringify(data, null, 2)}`);
-      this.viewMainPage.showDevices(data);
+      let data: DeviceInt[] | DeviceInt = JSON.parse(response);
+      if (Array.isArray(data)) {
+        this.devices = data;
+        this.viewMainPage.showDevices(data);
 
-      let element: HTMLElement;
-      data.forEach((data) => {
-        console.log(data);
-        element = this.myFramework.getElementById('dev_' + data.id);
-        element.addEventListener('click', this);
-      });
-      // let parrafo = this.myFramework.getElementById("lista");
-      // parrafo.innerHTML = response;
+        let element: HTMLElement;
+        data.forEach((data) => {
+          element = this.myFramework.getElementById('dev_' + data.id);
+          element.addEventListener('click', this);
+        });
+      } else {
+        this.currentDevice = data;
+      }
+    }
+    if (status === 404) {
+      M.toast({ html: `${res.message}`, classes: 'toast-failure' });
     } else {
-      console.log(`Status: ${status}`);
+      console.log(`Error: ${status}`);
     }
   }
 
-  handlePOSTResponse(status: number, response: string): void {
-    alert(`status: ${status} - response: ${response}`);
+  handlePOSTResponse(status: number, response: any): void {
+    let res = JSON.parse(response);
+    if (status === 200 || status === 201) {
+      M.toast({ html: `${res.message}`, classes: 'toast-success' });
+    }
+    if (status === 400) {
+      M.toast({ html: `${res.message}`, classes: 'toast-failure' });
+    } else {
+      console.log(`Error: ${status}`);
+    }
   }
+
+  handleDELETEResponse(status: number, response: any): void {
+    let res = JSON.parse(response);
+    if (status === 200) {
+      M.toast({ html: `${res.message}`, classes: 'toast-success' });
+    }
+    if (status === 404) {
+      M.toast({ html: `${res.message}`, classes: 'toast-failure' });
+    } else {
+      console.log(`Error: ${status}`);
+    }
+  }
+
+  handlePUTResponse(status: number, response: any): void {
+    let res = JSON.parse(response);
+    if (status === 200) {
+      M.toast({ html: `${res.message}`, classes: 'toast-success' });
+    }
+    if (status === 404) {
+      M.toast({ html: `${res.message}`, classes: 'toast-failure' });
+    } else {
+      console.log(`Error: ${status}`);
+    }
+  }
+  // -------Fin manejo de AJAX-------
+
+  // Devuelve un dispositivo con valores por defecto
+  defaultDevice(): DeviceInt {
+    return {
+      name: '',
+      description: '',
+      state: 0,
+      type: 0,
+    };
+  }
+
+  // -------Manejo de formulario-------
+  // Deja el formulario como estaba en un principio
+  clearForm() {
+    this.currentDevice = this.defaultDevice();
+    this.setFormData();
+    this.formStatus = 'none';
+  }
+
+  // Obtengo todos los datos del modal
+  getFormData(): DeviceInt {
+    let id = this.currentDevice.id;
+    let name = (
+      this.myFramework.getElementById('deviceName') as HTMLInputElement
+    ).value;
+    let description = (
+      this.myFramework.getElementById('deviceDescription') as HTMLInputElement
+    ).value;
+    let state = (
+      this.myFramework.getElementById('deviceState') as HTMLInputElement
+    ).checked
+      ? 1
+      : 0;
+    let type = +(
+      this.myFramework.getElementById('deviceType') as HTMLSelectElement
+    ).value;
+
+    return { id, name, description, state, type };
+  }
+
+  // Configuro todos los datos del modal
+  setFormData() {
+    console.log('setFormData', this.currentDevice);
+    (this.myFramework.getElementById('deviceName') as HTMLInputElement).value =
+      this.currentDevice.name;
+    (
+      this.myFramework.getElementById('deviceDescription') as HTMLInputElement
+    ).value = this.currentDevice.description;
+    (
+      this.myFramework.getElementById('deviceState') as HTMLInputElement
+    ).checked = this.currentDevice.state === 0 ? false : true;
+    (
+      this.myFramework.getElementById('deviceType') as HTMLSelectElement
+    ).options[this.currentDevice.type].selected = true;
+    this.selectInstances = M.FormSelect.init(
+      this.myFramework.getElementById('deviceType'),
+    );
+  }
+  // -------Fin manejo de formulario-------
+
+  // -------Manejo de dispositivos en memoria-------
+  addNewDevice(device: DeviceInt) {
+    this.devices = [...this.devices, device];
+  }
+  removeDevice(id: string) {
+    this.devices = this.devices.filter((device) => device.id !== id);
+  }
+  updateDevice(id: string, update: DeviceInt) {
+    const deviceIndex = this.devices.findIndex((device) => id === device.id);
+
+    if (deviceIndex > -1) {
+      this.devices[deviceIndex] = {
+        ...this.devices[deviceIndex],
+        ...update,
+      };
+    } else {
+      console.log('Error al actualizar. No lo encuentra');
+    }
+  }
+  getDevices() {
+    // Se vuelven a renderizar los elementos
+    this.viewMainPage.showDevices(this.devices);
+
+    // Se agregan los listener a los nuevos elementos
+    let element: HTMLElement;
+    this.devices.forEach((device) => {
+      element = this.myFramework.getElementById('dev_' + device.id);
+      this.elementListener.set(
+        element,
+        element.addEventListener('click', this),
+      );
+    });
+  }
+  // -------Fin manejo de dispositivos en memoria-------
 }
 
-window.onload = function () {
+window.addEventListener('load', function () {
   const main = new Main();
-  // inicializo myFramework
   main.main();
-  // main.mostrarLista();
-  let usersList: Array<User> = new Array<User>();
-  let user1: User = new User(1, 'a@a.com', true);
-  let user2: User = new User(2, 'b@b.com', false);
-  let user3: User = new User(3, 'c@c.com', true);
 
-  usersList.push(user1);
-  usersList.push(user2);
-  usersList.push(user3);
-
-  // Ejercicio 4-2
-  // main.mostrarUsers(usersList);
-
-  let btnListar: HTMLElement = main.myFramework.getElementById('btnListar');
-  btnListar.textContent = 'Listar';
-  let btnLimpiar: HTMLElement = main.myFramework.getElementById('btnLimpiar');
-  btnLimpiar.textContent = 'Limpiar';
-
-  // Ejercio 5
-  // boton.addEventListener('click', main.evento);
-
-  // Ejercicio 6
-  btnListar.addEventListener('click', main);
-
-  // Ejercicio 7
-  btnLimpiar.addEventListener('click', main);
-};
-
-// window.addEventListener('load', function() {
-//     main()
-// }) Es lo mismo que con el atributo de window.onload
+  // Agregar listener desde otro lugar para demostrar que se puede
+  let modal1: HTMLElement = main.myFramework.getElementById('modal1');
+  modal1.addEventListener('click', main);
+  let modal2: HTMLElement = main.myFramework.getElementById('modal2');
+  modal2.addEventListener('click', main);
+  let btnCreateDevice: HTMLElement =
+    main.myFramework.getElementById('btnCreateDevice');
+  btnCreateDevice.addEventListener('click', main);
+});

@@ -1,64 +1,92 @@
 interface GETResponseListener {
-    handleGETResponse(status: number, response: string): void;
+  handleGETResponse(status: number, response: any): void;
 }
 
 interface POSTResponseListener {
-    handlePOSTResponse(status: number, response: string): void;
+  handlePOSTResponse(status: number, response: any): void;
 }
 
+interface DELETEResponseListener {
+  handleDELETEResponse(status: number, response: any): void;
+}
+
+interface PUTResponseListener {
+  handlePUTResponse(status: number, response: any): void;
+}
 class MyFramework {
-    constructor(){}
+  constructor() {}
 
-    getElementById(elementId: string): HTMLElement {
-        return document.getElementById(elementId)
-    }
+  getElementById(elementId: string): HTMLElement {
+    return document.getElementById(elementId);
+  }
 
-    getElementByEvent(event: Event): HTMLElement {
-        return event.target as HTMLElement;
-    }
+  getElementByEvent(event: Event): HTMLElement {
+    return event.target as HTMLElement;
+  }
 
-    requestGET(url: string, listener: GETResponseListener) {
-        let xhr: XMLHttpRequest;
-        xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = () => {
-            if(xhr.readyState === 4) {
-                if(xhr.status === 200) {
-                    listener.handleGETResponse(xhr.status, xhr.responseText);
-                } else {
-                    listener.handleGETResponse(xhr.status, null);
-                }
-            }
+  requestGET(url: string, listener: GETResponseListener) {
+    let xhr: XMLHttpRequest;
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          listener.handleGETResponse(xhr.status, xhr.response);
+        } else {
+          listener.handleGETResponse(xhr.status, null);
         }
-        xhr.open('GET', url, true);
-        xhr.send(null);
-    }
+      }
+    };
+    xhr.open('GET', url, true);
+    xhr.send(null);
+  }
 
-    requestPost(url: string, data: object, listener: POSTResponseListener) {
-        let xhr: XMLHttpRequest;
-        xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = () => {
-            if(xhr.readyState === 4) {
-                if(xhr.status === 200) {
-                    listener.handlePOSTResponse(xhr.status, xhr.responseText);
-                } else {
-                    listener.handlePOSTResponse(xhr.status, null);
-                }
-            }
+  requestPOST(url: string, data: object, listener: POSTResponseListener) {
+    let xhr: XMLHttpRequest;
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200 || xhr.status === 201) {
+          listener.handlePOSTResponse(xhr.status, xhr.response);
+        } else {
+          listener.handlePOSTResponse(xhr.status, null);
         }
-        xhr.open('POST', url);
-        // xhr.send(null);
+      }
+    };
+    xhr.open('POST', url);
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.send(JSON.stringify(data));
+  }
 
-        // envio JSON en body de request (NodeJS)
-        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xhr.send(JSON.stringify(data));
-        console.log(`Lo que se envia como BODY: ${JSON.stringify(data)}`)
+  requestDELETE(url: string, listener: DELETEResponseListener) {
+    let xhr: XMLHttpRequest;
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          listener.handleDELETEResponse(xhr.status, xhr.response);
+        } else {
+          listener.handleDELETEResponse(xhr.status, null);
+        }
+      }
+    };
+    xhr.open('DELETE', url, true);
+    xhr.send(null);
+  }
 
-        // envio Formdata en body de request (Apache, PythonWS, etc)
-        // let formData: FormData = new FormData();
-        // for (let key in data) {
-        //     formData.append(key, data[key]);
-        // }
-        // xhr.send(formData);
-
-    }
+  requestPUT(url: string, data: object, listener: PUTResponseListener) {
+    let xhr: XMLHttpRequest;
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          listener.handlePUTResponse(xhr.status, xhr.response);
+        } else {
+          listener.handlePUTResponse(xhr.status, null);
+        }
+      }
+    };
+    xhr.open('PUT', url);
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.send(JSON.stringify(data));
+  }
 }
